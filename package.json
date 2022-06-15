@@ -1,0 +1,33 @@
+{
+  "name": "bot_passive",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "update": "node deploy-commands.js",
+    "start": "node main.js",
+    "start-dev": "nodemon main.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DevShimi92/bot_passive.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DevShimi92/bot_passive/issues"
+  },
+  "homepage": "https://github.com/DevShimi92/bot_passive#readme",
+  "dependencies": {
+    "@discordjs/builders": "^0.15.0",
+    "@discordjs/rest": "^0.5.0",
+    "discord-api-types": "^0.34.0",
+    "discord.js": "^13.8.0",
+    "dotenv": "^16.0.1",
+    "log4js": "^6.5.2"
+  },
+  "devDependencies": {
+    "eslint": "^8.17.0",
+    "nodemon": "^2.0.16"
+  }
+}
