@@ -2,10 +2,20 @@ const { Client, Collection, Intents } = require('discord.js');
 const log4js = require('log4js');
 const fs = require('node:fs');
 const path = require('node:path');
+const Sequelize = require('sequelize');
 
 log4js.configure('./configs/log4js.json');
 
+const log = require('log4js').getLogger('Sequelize');
+
 require('dotenv').config({ path: '.env' });
+
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+	host: 'localhost',
+	dialect: 'postgres',
+	protocol: 'postgres',
+	logging: msg => log.trace(msg),
+});
 
 const client = new Client(
 	{
@@ -14,6 +24,10 @@ const client = new Client(
 			Intents.FLAGS.GUILD_VOICE_STATES,
 		],
 	});
+
+client.database = new Collection();
+
+client.database.set('db', sequelize);
 
 const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
