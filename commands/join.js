@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { VoiceConnectionStatus, entersState, getVoiceConnection, joinVoiceChannel } = require('@discordjs/voice');
 const log = require('log4js').getLogger('Join');
 
+
 async function connectToChannel(client, interaction) {
 
 	const channel = interaction.member.voice.channel;

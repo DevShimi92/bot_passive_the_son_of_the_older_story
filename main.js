@@ -28,6 +28,7 @@ const client = new Client(
 client.database = new Collection();
 
 client.database.set('db', sequelize);
+client.database.set('lockScan', false);
 
 const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
