@@ -1,12 +1,26 @@
 version: '3.4'
 
 services:
-  bot_passive:
-    image: botpassive
-    build:
-      context: .
-      dockerfile: ./Dockerfile
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: database_bot
+    ports:
+      - 5432:5432
+  app:
+    image: devshimi92/botpassive:latest
     environment:
       NODE_ENV: production
+      TOKEN: ${TOKEN}
+      DATABASE_URL: postgresql://postgres:admin@db:5432/database_bot
+      PATH_MUSIC : /media
     ports:
       - 3000:3000
+    links:
+      - db
+    volumes:
+    - ${PATH_MUSIC}:/media
+    - ${PATH_LOG}:/usr/src/bot/logs
