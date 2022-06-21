@@ -128,6 +128,7 @@ module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('scan')
 		.setDescription('Scan the storage !')
+		.setDMPermission(false)
 		.addBooleanOption(option =>
 			option.setName('forcebdd')
 				.setDescription('Erase the base of donnee before scan')
@@ -136,40 +137,47 @@ module.exports = {
 
 		const lockScan = client.database.get('lockScan');
 
-		if (lockScan) {
-			await interaction.reply('In progress !');
-		}
-		else {
+		if (interaction.user.id == process.env.IDOWNER) {
 
-			await interaction.reply('In progress !');
-
-			client.database.set('lockScan', true);
-
-			log.info('Start of folder scan ...');
-
-			const tabSong = getFilesFromDir(process.env.PATH_MUSIC);
-
-			if (tabSong.length == 0) {
-
-				log.info('Scan done ! Music not found !');
-				client.database.set('lockScan', false);
-				await interaction.editReply('Done ! Music not found during the scan !');
+			if (lockScan) {
+				await interaction.reply('In progress !');
 			}
 			else {
 
-				log.info('Scan done ! Beginning of adding music to the database ...');
+				await interaction.reply('In progress !');
 
-				const sequelize = client.database.get('db');
+				client.database.set('lockScan', true);
 
-				const forcebdd = await interaction.options.getBoolean('forcebdd');
+				log.info('Start of folder scan ...');
 
-				await addSongToDatabase(tabSong, sequelize, forcebdd);
+				const tabSong = getFilesFromDir(process.env.PATH_MUSIC);
 
-				client.database.set('lockScan', false);
+				if (tabSong.length == 0) {
 
-				await interaction.editReply('Done !');
+					log.info('Scan done ! Music not found !');
+					client.database.set('lockScan', false);
+					await interaction.editReply('Done ! Music not found during the scan !');
+				}
+				else {
+
+					log.info('Scan done ! Beginning of adding music to the database ...');
+
+					const sequelize = client.database.get('db');
+
+					const forcebdd = await interaction.options.getBoolean('forcebdd');
+
+					await addSongToDatabase(tabSong, sequelize, forcebdd);
+
+					client.database.set('lockScan', false);
+
+					await interaction.editReply('Done !');
+				}
+
 			}
 
+		}
+		else {
+			await interaction.reply('Only the bot owner can use this command');
 		}
 
 	},

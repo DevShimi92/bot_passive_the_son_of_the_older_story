@@ -56,7 +56,8 @@ async function connectToChannel(client, interaction) {
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('join')
-		.setDescription('Join a channel'),
+		.setDescription('Join a channel')
+		.setDMPermission(false),
 	async execute(client, interaction) {
 		await connectToChannel(client, interaction);
 	},

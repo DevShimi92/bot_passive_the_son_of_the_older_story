@@ -13,6 +13,14 @@ function authenticationsSequelize(client) {
 		logdb.error(err);
 	});
 
+	const modelDefiners = [
+		require('../models/song.model'),
+	];
+
+	for (const modelDefiner of modelDefiners) {
+		modelDefiner(sequelize);
+	}
+
 	sequelize.sync().then(() => {
 		logdb.info('Database synchronization successful !');
 
