@@ -15,6 +15,7 @@ services:
     environment:
       NODE_ENV: production
       TOKEN: ${TOKEN}
+      IDOWNER : ${IDOWNER}
       DATABASE_URL: postgresql://postgres:admin@db:5432/database_bot
       PATH_MUSIC : /media
     ports:
