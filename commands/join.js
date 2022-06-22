@@ -8,7 +8,7 @@ async function connectToChannel(client, interaction) {
 	const channel = interaction.member.voice.channel;
 
 	if (!interaction.member.voice.channelId) {
-		log.warn(interaction.member.user.username + ' is not in a voice channel');
+		log.warn('[ ' + interaction.member.guild.name + ' ] ' + interaction.member.user.username + ' is not in a voice channel');
 		await interaction.reply('Please join a Voice Channel first !');
 		return;
 	}
@@ -16,7 +16,7 @@ async function connectToChannel(client, interaction) {
 	const connection = getVoiceConnection(interaction.guild.id);
 
 	if (connection) {
-		log.info('The bot is already in the channel ' + interaction.member.user.username);
+		log.info('[ ' + interaction.member.guild.name + ' ] ' + 'The bot is already in the channel ' + interaction.member.user.username);
 		await interaction.reply('Already connected');
 		return;
 	}
@@ -27,20 +27,20 @@ async function connectToChannel(client, interaction) {
 	});
 
 	newConnection.on(VoiceConnectionStatus.Ready, () => {
-		log.info('The bot join the channel like as demanded ' + interaction.member.user.username);
+		log.info('[ ' + interaction.member.guild.name + ' ] ' + 'The bot join the channel like as demanded ' + interaction.member.user.username);
 		interaction.reply('I\'am on the channel !');
 	});
 
 	newConnection.on(VoiceConnectionStatus.Disconnected, async () => {
 		try {
+			log.warn('[ ' + interaction.member.guild.name + ' ] ' + 'Disconnected! Attempt to reconnect ...');
 			await Promise.race([
 				entersState(newConnection, VoiceConnectionStatus.Signalling, 5_000),
 				entersState(newConnection, VoiceConnectionStatus.Connecting, 5_000),
 			]);
-			// Seems to be reconnecting to a new channel - ignore disconnect
 		}
 		catch (error) {
-			log.error('For some unknown reason, connection lost');
+			log.error('[ ' + interaction.member.guild.name + ' ] ' + 'For some unknown reason, connection lost !');
 			newConnection.destroy();
 		}
 	});

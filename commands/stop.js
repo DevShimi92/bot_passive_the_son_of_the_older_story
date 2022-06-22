@@ -9,15 +9,15 @@ module.exports = {
 	async execute(client, interaction) {
 
 		if (!client.music.get('player')) {
-			log.warn('Don\'t have player of music setted. Mistake of ' + interaction.member.user.username + ' ?');
+			log.warn('[ ' + interaction.member.guild.name + ' ] ' + 'Don\'t have player of music setted. Mistake of ' + interaction.member.user.username + ' ?');
 			await interaction.reply('I already play a song ?');
 		}
 		else {
-			const player = client.music.get('player');
+			const player = client.player.get(interaction.guild.id);
 			player.stop();
-			client.music.set('player', undefined);
-			client.music.set('playlist', []);
-			log.info('Music stopped by ' + interaction.member.user.username);
+			client.player.set('player', undefined);
+			client.playlist.set('playlist', []);
+			log.info('[ ' + interaction.member.guild.name + ' ] ' + 'Music stopped by ' + interaction.member.user.username);
 			await interaction.reply('Music stopped !');
 		}
 

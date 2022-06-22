@@ -19,7 +19,7 @@
         "category": "consoleshow",
         "layout": {
           "type": "pattern",
-          "pattern": "%[[%d{dd-MM-yyyy hh:mm:ss.SSS}] [%p] %c -%] %m"
+          "pattern": "%[[%d{dd-MM-yyyy hh:mm:ss.SSS}] [%-5p] %c %]%m"
         }
       },
       "just-info": {

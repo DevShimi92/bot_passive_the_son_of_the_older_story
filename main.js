@@ -25,7 +25,9 @@ const client = new Client(
 		],
 	});
 
-client.music = new Collection();
+client.player = new Collection();
+client.playlist = new Collection();
+client.paused = new Collection();
 
 client.database = new Collection();
 
@@ -67,7 +69,8 @@ client.on('interactionCreate', async interaction => {
 		await command.execute(client, interaction);
 	}
 	catch (error) {
-		console.error(error);
+		log.error('[ ' + interaction.member.guild.name + ' ] ' + 'Error with ' + interaction.commandName);
+		log.error(error);
 		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
 	}
 });

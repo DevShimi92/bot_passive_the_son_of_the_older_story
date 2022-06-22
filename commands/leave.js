@@ -11,21 +11,21 @@ module.exports = {
 	async execute(client, interaction) {
 		const connection = getVoiceConnection(interaction.guild.id);
 
-		if (client.music.get('player')) {
-			const player = client.music.get('player');
+		if (client.player.get(interaction.guild.id)) {
+			const player = client.player.get(interaction.guild.id);
 			player.stop();
-			client.music.set('player', undefined);
-			client.music.set('playlist', []);
+			client.player.set(interaction.guild.id, undefined);
+			client.playlist.set(interaction.guild.id, []);
 		}
 
 		if (connection) {
 			connection.destroy();
-			log.info('The bot quit the channel like as demanded ' + interaction.member.user.username);
+			log.info('[ ' + interaction.member.guild.name + ' ] ' + 'The bot quit the channel like as demanded ' + interaction.member.user.username);
 			await interaction.reply('Bye!');
 
 		}
 		else {
-			log.warn('The bot is not in the channel ' + interaction.member.user.username);
+			log.warn('[ ' + interaction.member.guild.name + ' ] ' + 'The bot is not in the channel ' + interaction.member.user.username);
 			await interaction.reply('But i\'am not here !');
 		}
 

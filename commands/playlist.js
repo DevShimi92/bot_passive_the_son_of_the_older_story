@@ -8,16 +8,16 @@ module.exports = {
 		.setDMPermission(false),
 	async execute(client, interaction) {
 		if (!interaction.member.voice.channelId) {
-			log.warn(interaction.member.user.username + ' is not in a voice channel');
+			log.warn('[ ' + interaction.member.guild.name + ' ] ' + interaction.member.user.username + ' is not in a voice channel');
 			await interaction.reply('Please join a Voice Channel first !');
 		}
-		else if (!client.music.get('player')) {
-			log.warn('Don\'t have player of music setted. Mistake of ' + interaction.member.user.username + ' ?');
+		else if (!client.player.get(interaction.guild.id)) {
+			log.warn('[ ' + interaction.member.guild.name + ' ] ' + 'Don\'t have player of music setted. Mistake of ' + interaction.member.user.username + ' ?');
 			await interaction.reply('I already play a song ?');
 		}
 		else {
-			log.info(interaction.member.user.username + ' asks the playlist');
-			const playlist = client.music.get('playlist');
+			log.info('[ ' + interaction.member.guild.name + ' ] ' + interaction.member.user.username + ' asks the playlist');
+			const playlist = client.playlist.get(interaction.guild.id);
 			let msg = '```\n';
 
 			msg += 'Playing : ' + playlist[0].metadata.title + '\n';

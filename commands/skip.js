@@ -8,25 +8,25 @@ module.exports = {
 		.setDMPermission(false),
 	async execute(client, interaction) {
 
-		if (!client.music.get('player')) {
-			log.warn('Don\'t have player of music setted. Mistake of ' + interaction.member.user.username + ' ?');
+		if (!client.player.get(interaction.guild.id)) {
+			log.warn('[ ' + interaction.member.guild.name + ' ] ' + 'Don\'t have player of music setted. Mistake of ' + interaction.member.user.username + ' ?');
 			await interaction.reply('I already play a song ?');
 		}
 		else {
-			log.info('Music skiped by ' + interaction.member.user.username);
-			const player = client.music.get('player');
-			const playlist = client.music.get('playlist');
+			log.info('[ ' + interaction.member.guild.name + ' ] ' + 'Music skiped by ' + interaction.member.user.username);
+			const player = client.player.get(interaction.guild.id);
+			const playlist = client.playlist.get(interaction.guild.id);
 			playlist.shift();
 			if (playlist.length > 0) {
 				log.info('Next Song : ' + playlist[0].metadata.title);
 				player.play(playlist[0]);
 			}
 			else {
-				log.info('End of playlist');
+				log.info('[ ' + interaction.member.guild.name + ' ] ' + 'End of playlist');
 				player.stop();
-				client.music.set('player', undefined);
-				client.music.set('playlist', []);
-				log.info('Music stopped');
+				client.player.set('player', undefined);
+				client.playlist.set('playlist', []);
+				log.info('[ ' + interaction.member.guild.name + ' ] ' + 'Music stopped');
 			}
 			await interaction.reply('Skip!');
 		}
