@@ -1,11 +1,11 @@
-name: Build and Publish
+name: CI
 
 on:
   push:
     branches: [ main ]
 
 jobs:
-  Build-and-push-docker-image:
+  Docker:
     runs-on: ubuntu-latest
     steps:
     - name: Set up QEMU
