@@ -4,7 +4,7 @@ const log = require('log4js').getLogger('skip');
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('skip')
-		.setDescription('Skip a song!')
+		.setDescription('Skip a song')
 		.setDMPermission(false),
 	async execute(client, interaction) {
 

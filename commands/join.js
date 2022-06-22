@@ -40,7 +40,7 @@ async function connectToChannel(client, interaction) {
 			// Seems to be reconnecting to a new channel - ignore disconnect
 		}
 		catch (error) {
-			// Seems to be a real disconnect which SHOULDN'T be recovered from
+			log.error('For some unknown reason, connection lost');
 			newConnection.destroy();
 		}
 	});

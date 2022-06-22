@@ -5,11 +5,9 @@ const log = require('log4js').getLogger('Scan');
 const jsmediatags = require('jsmediatags');
 
 
-async function addSongToDatabase(tabSong, sequelize, forcebdd) {
+async function addSongToDatabase(tabSong, Song, forcebdd) {
 
 	const regex = /\b(Disc|disk|DISK) \d/g;
-
-	const Song = require('../models/song.model')(sequelize);
 
 	const songError = new Map();
 
@@ -102,7 +100,7 @@ function getTags(url) {
 
 function getFilesFromDir(dir) {
 
-	const fileTypes = ['.mp3', '.flac'];
+	const fileTypes = ['.mp3', 'wav', '.flac'];
 
 	const tabSong = [];
 
@@ -136,7 +134,7 @@ function getFilesFromDir(dir) {
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('scan')
-		.setDescription('Scan the storage !')
+		.setDescription('Scan the storage')
 		.setDMPermission(false)
 		.addBooleanOption(option =>
 			option.setName('forcebdd')
@@ -145,6 +143,10 @@ module.exports = {
 	async execute(client, interaction) {
 
 		const lockScan = client.database.get('lockScan');
+
+		const sequelize = client.database.get('db');
+
+		const Song = require('../models/song.model')(sequelize);
 
 		if (interaction.user.id == process.env.IDOWNER) {
 
@@ -163,7 +165,9 @@ module.exports = {
 
 				if (tabSong.length == 0) {
 
-					log.info('Scan done ! Music not found !');
+					log.warn('Scan done ! Music not found ! Erase of the database ...');
+					await Song.sync({ force: true });
+					log.info('Done !');
 					client.database.set('lockScan', false);
 					await interaction.editReply('Done ! Music not found during the scan !');
 				}
@@ -171,11 +175,9 @@ module.exports = {
 
 					log.info('Scan done ! Beginning of adding music to the database ...');
 
-					const sequelize = client.database.get('db');
-
 					const forcebdd = await interaction.options.getBoolean('forcebdd');
 
-					await addSongToDatabase(tabSong, sequelize, forcebdd);
+					await addSongToDatabase(tabSong, Song, forcebdd);
 
 					client.database.set('lockScan', false);
 
@@ -186,6 +188,7 @@ module.exports = {
 
 		}
 		else {
+			log.warn(interaction.member.user.username + 'try to scan but he is not the owner');
 			await interaction.reply('Only the bot owner can use this command');
 		}
 

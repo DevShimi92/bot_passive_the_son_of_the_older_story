@@ -4,7 +4,7 @@ const log = require('log4js').getLogger('Resume');
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('resume')
-		.setDescription('Resume a song!')
+		.setDescription('Resume a song')
 		.setDMPermission(false),
 	async execute(client, interaction) {
 		if (!client.music.get('player')) {

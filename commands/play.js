@@ -2,13 +2,15 @@ const { SlashCommandBuilder } = require('@discordjs/builders');
 const { VoiceConnectionStatus, AudioPlayerStatus, entersState, joinVoiceChannel, createAudioResource, createAudioPlayer, getVoiceConnection } = require('@discordjs/voice');
 const log = require('log4js').getLogger('Play');
 
-async function randomSong(client) {
+async function randomSong(client, interaction) {
 
 	const sequelize = client.database.get('db');
 	const Song = require('../models/song.model')(sequelize);
 	const idmax = await Song.max('song_id');
 
-	if (isNaN(idmax)) {
+	if (idmax == null) {
+		log.warn('Music not found in database !');
+		await interaction.editReply('Music not found in database !');
 		return null;
 	}
 
@@ -40,6 +42,10 @@ async function randomSong(client) {
 }
 
 async function addSong(client, resource, interaction) {
+
+	if (resource == null) {
+		return;
+	}
 
 	const player = client.music.get('player');
 	const connection = getVoiceConnection(interaction.guild.id);
@@ -89,7 +95,7 @@ async function connectToChannel(client, interaction) {
 			// Seems to be reconnecting to a new channel - ignore disconnect
 		}
 		catch (error) {
-			// Seems to be a real disconnect which SHOULDN'T be recovered from
+			log.error('For some unknown reason, connection lost');
 			newConnection.destroy();
 		}
 	});
@@ -159,7 +165,7 @@ module.exports = {
 		else {
 			await interaction.deferReply();
 			log.debug(interaction.member.user.username + ' want one song');
-			addSong(client, await randomSong(client), interaction);
+			addSong(client, await randomSong(client, interaction), interaction);
 		}
 
 	},
