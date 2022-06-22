@@ -13,7 +13,7 @@ module.exports = (sequelize) => {
 			type: DataTypes.STRING,
 		},
 		numberTrack: {
-			type: DataTypes.STRING(3),
+			type: DataTypes.STRING(5),
 		},
 		album: {
 			type: DataTypes.STRING,
@@ -29,6 +29,9 @@ module.exports = (sequelize) => {
 		},
 		year: {
 			type: DataTypes.INTEGER,
+		},
+		picture: {
+			type: DataTypes.BLOB,
 		},
 		path: {
 			type: DataTypes.STRING,

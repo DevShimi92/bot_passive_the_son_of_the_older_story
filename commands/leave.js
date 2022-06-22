@@ -10,6 +10,14 @@ module.exports = {
 		.setDMPermission(false),
 	async execute(client, interaction) {
 		const connection = getVoiceConnection(interaction.guild.id);
+
+		if (client.music.get('player')) {
+			const player = client.music.get('player');
+			player.stop();
+			client.music.set('player', undefined);
+			client.music.set('playlist', []);
+		}
+
 		if (connection) {
 			connection.destroy();
 			log.info('The bot quit the channel like as demanded ' + interaction.member.user.username);

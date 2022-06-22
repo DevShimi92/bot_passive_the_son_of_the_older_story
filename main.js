@@ -25,6 +25,8 @@ const client = new Client(
 		],
 	});
 
+client.music = new Collection();
+
 client.database = new Collection();
 
 client.database.set('db', sequelize);

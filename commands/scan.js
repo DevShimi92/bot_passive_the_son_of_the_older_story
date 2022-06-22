@@ -36,6 +36,14 @@ async function addSongToDatabase(tabSong, sequelize, forcebdd) {
 				discNumber = tabSong[i].slice(pos + 5, pos + 6);
 			}
 
+			if (tag.tags.artist == null) {
+				tag.tags.artist = 'Unknown';
+			}
+
+			if (tag.tags.album == null) {
+				tag.tags.album = 'Single';
+			}
+
 			const songdb = { song_id : idmax,
 				name : tag.tags.title,
 				numberTrack : tag.tags.track,
@@ -44,6 +52,7 @@ async function addSongToDatabase(tabSong, sequelize, forcebdd) {
 				artist : tag.tags.artist,
 				genre : tag.tags.genre,
 				year : tag.tags.year,
+				picture : tag.tags.picture.data,
 				path : tabSong[i],
 			};
 
