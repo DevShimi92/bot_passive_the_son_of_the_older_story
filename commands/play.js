@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { VoiceConnectionStatus, AudioPlayerStatus, entersState, joinVoiceChannel, createAudioResource, createAudioPlayer, getVoiceConnection } = require('@discordjs/voice');
+const { AudioPlayerStatus, createAudioResource, createAudioPlayer, getVoiceConnection } = require('@discordjs/voice');
 const log = require('log4js').getLogger('Play');
+const join = require('./join');
 
 async function randomSong(client, interaction) {
 
@@ -41,7 +42,7 @@ async function randomSong(client, interaction) {
 
 }
 
-async function addSong(client, resource, interaction) {
+async function addSong(client, interaction, resource) {
 
 	if (resource == null) {
 		return;
@@ -67,45 +68,40 @@ async function addSong(client, resource, interaction) {
 
 }
 
-async function connectToChannel(client, interaction) {
+async function createPlayer(client, interaction) {
 
-	const channel = interaction.member.voice.channel;
+	const player = createAudioPlayer();
 
-	if (!interaction.member.voice.channelId) {
-		await interaction.editReply('Please join a Voice Channel first !');
-		return;
-	}
+	player.on(AudioPlayerStatus.Paused, () => {
+		log.debug('[ ' + interaction.member.guild.name + ' ] ' + 'The audio player has be paused!');
+		client.paused.set(interaction.guild.id, true);
 
-	const newConnection = joinVoiceChannel({
-		channelId: channel.id,
-		guildId: channel.guild.id,
-		adapterCreator: channel.guild.voiceAdapterCreator,
 	});
 
-	newConnection.on(VoiceConnectionStatus.Ready, () => {
-		log.info('[ ' + interaction.member.guild.name + ' ] ' + 'The bot join the channel for play a music like as demanded ' + interaction.member.user.username);
+	player.on(AudioPlayerStatus.Playing, () => {
+		log.debug('[ ' + interaction.member.guild.name + ' ] ' + 'The audio player has started playing!');
+		client.paused.set(interaction.guild.id, false);
 	});
 
-	newConnection.on(VoiceConnectionStatus.Disconnected, async () => {
-		try {
-			log.warn('[ ' + interaction.member.guild.name + ' ] ' + 'Disconnected! Attempt to reconnect ...');
-			await Promise.race([
-				entersState(newConnection, VoiceConnectionStatus.Signalling, 5_000),
-				entersState(newConnection, VoiceConnectionStatus.Connecting, 5_000),
-			]);
+	player.on(AudioPlayerStatus.Idle, () => {
+		const playlist = client.playlist.get(interaction.guild.id);
+		playlist.shift();
+		if (playlist.length > 0) {
+			log.info('[ ' + interaction.member.guild.name + ' ] ' + 'Next Song : ' + playlist[0].metadata.title);
+			player.play(playlist[0]);
 		}
-		catch (error) {
-			log.error('[ ' + interaction.member.guild.name + ' ] ' + 'For some unknown reason, connection lost !');
-			newConnection.destroy();
+		else {
+			log.info('[ ' + interaction.member.guild.name + ' ] ' + 'End of playlist');
 		}
 	});
 
-	newConnection.on(VoiceConnectionStatus.Destroyed, () => {
-		// try to delete the queue
-		if (client.queues) {
-			client.queues.delete(channel.guild.id);
-		}
+	player.on('error', error => {
+		log.error('[ ' + interaction.member.guild.name + ' ] ' + `Error: ${error.message} with resource ${error.resource.metadata.title}`);
 	});
+
+	client.player.set(interaction.guild.id, player);
+	const numberOfPlayer = new Number(client.player.get('numberOfPlayer'));
+	client.player.set('numberOfPlayer', numberOfPlayer + 1);
 }
 
 module.exports = {
@@ -117,48 +113,10 @@ module.exports = {
 
 		await interaction.deferReply();
 
-		if (!getVoiceConnection(interaction.guild.id)) {
-			await connectToChannel(client, interaction);
-		}
-
-		if (!getVoiceConnection(interaction.guild.id)) {
-			log.warn('[ ' + interaction.member.guild.name + ' ] ' + interaction.member.user.username + ' is not in a voice channel');
-		}
-		else {
+		if (await join.connectToChannel(client, interaction) == undefined) {
 
 			if (!client.player.get(interaction.guild.id)) {
-
-				const player = createAudioPlayer();
-
-				player.on(AudioPlayerStatus.Paused, () => {
-					log.debug('[ ' + interaction.member.guild.name + ' ] ' + 'The audio player has be paused!');
-					client.paused.set(interaction.guild.id, true);
-
-				});
-
-				player.on(AudioPlayerStatus.Playing, () => {
-					log.debug('[ ' + interaction.member.guild.name + ' ] ' + 'The audio player has started playing!');
-					client.paused.set(interaction.guild.id, false);
-				});
-
-				player.on(AudioPlayerStatus.Idle, () => {
-					const playlist = client.playlist.get(interaction.guild.id);
-					playlist.shift();
-					if (playlist.length > 0) {
-						log.info('[ ' + interaction.member.guild.name + ' ] ' + 'Next Song : ' + playlist[0].metadata.title);
-						player.play(playlist[0]);
-					}
-					else {
-						log.info('[ ' + interaction.member.guild.name + ' ] ' + 'End of playlist');
-					}
-				});
-
-				player.on('error', error => {
-					log.error('[ ' + interaction.member.guild.name + ' ] ' + `Error: ${error.message} with resource ${error.resource.metadata.title}`);
-				});
-
-				client.player.set(interaction.guild.id, player);
-
+				await createPlayer(client, interaction);
 			}
 
 			if (!client.playlist.get(interaction.guild.id)) {
@@ -166,10 +124,14 @@ module.exports = {
 				client.playlist.set(interaction.guild.id, playlist);
 			}
 
-
 			log.debug('[ ' + interaction.member.guild.name + ' ] ' + interaction.member.user.username + ' want one song');
-			addSong(client, await randomSong(client, interaction), interaction);
+			addSong(client, interaction, await randomSong(client, interaction));
+		}
+		else {
+			log.warn('[ ' + interaction.member.guild.name + ' ] ' + interaction.member.user.username + ' is not in a voice channel');
 		}
 
 	},
+	createPlayer,
+	addSong,
 };

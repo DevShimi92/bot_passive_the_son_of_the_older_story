@@ -1,6 +1,6 @@
 {
   "name": "bot_passive",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -31,7 +31,8 @@
     "log4js": "^6.5.2",
     "pg": "^8.7.3",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.21.0"
+    "sequelize": "^6.21.0",
+    "ytdl-core": "^4.11.0"
   },
   "devDependencies": {
     "eslint": "^8.17.0",

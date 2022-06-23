@@ -26,6 +26,8 @@ const client = new Client(
 	});
 
 client.player = new Collection();
+client.player.set('numberOfPlayer', 0);
+
 client.playlist = new Collection();
 client.paused = new Collection();
 

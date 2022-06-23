@@ -3,22 +3,23 @@ const { VoiceConnectionStatus, entersState, getVoiceConnection, joinVoiceChannel
 const log = require('log4js').getLogger('Join');
 
 
-async function connectToChannel(client, interaction) {
+async function connectToChannel(client, interaction, cmdOnly) {
 
 	const channel = interaction.member.voice.channel;
 
 	if (!interaction.member.voice.channelId) {
 		log.warn('[ ' + interaction.member.guild.name + ' ] ' + interaction.member.user.username + ' is not in a voice channel');
-		await interaction.reply('Please join a Voice Channel first !');
-		return;
+		await interaction.editReply('Please join a Voice Channel first !');
+		return false;
 	}
 
 	const connection = getVoiceConnection(interaction.guild.id);
 
 	if (connection) {
 		log.info('[ ' + interaction.member.guild.name + ' ] ' + 'The bot is already in the channel ' + interaction.member.user.username);
-		await interaction.reply('Already connected');
-		return;
+		if (cmdOnly) {
+			await interaction.editReply('Already connected');
+		}
 	}
 	const newConnection = joinVoiceChannel({
 		channelId: channel.id,
@@ -28,7 +29,9 @@ async function connectToChannel(client, interaction) {
 
 	newConnection.on(VoiceConnectionStatus.Ready, () => {
 		log.info('[ ' + interaction.member.guild.name + ' ] ' + 'The bot join the channel like as demanded ' + interaction.member.user.username);
-		interaction.reply('I\'am on the channel !');
+		if (cmdOnly) {
+			interaction.editReply('I\'am on the channel !');
+		}
 	});
 
 	newConnection.on(VoiceConnectionStatus.Disconnected, async () => {
@@ -59,6 +62,8 @@ module.exports = {
 		.setDescription('Join a channel')
 		.setDMPermission(false),
 	async execute(client, interaction) {
-		await connectToChannel(client, interaction);
+		await interaction.deferReply();
+		await connectToChannel(client, interaction, true);
 	},
+	connectToChannel,
 };

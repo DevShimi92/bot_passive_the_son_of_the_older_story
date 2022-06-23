@@ -21,13 +21,26 @@ module.exports = {
 			const player = client.player.get(interaction.guild.id);
 			const data = player._state.resource.metadata;
 			const file = new MessageAttachment(data.picture, 'image.png');
+			let playingEmbed;
+			if (data.album == 'Youtube') {
+				playingEmbed = new MessageEmbed()
+					.setColor('#ff7f00')
+					.setTitle(data.title)
+					.setURL(data.urlVideo)
+					.setAuthor({ name: data.artist, url: data.urlChannel })
+					.setDescription('From ' + data.album)
+					.setThumbnail('attachment://image.png')
+					.setImage(data.ytPicture);
 
-			const playingEmbed = new MessageEmbed()
-				.setColor('#ff7f00')
-				.setTitle(data.title)
-				.setAuthor({ name: data.artist })
-				.setDescription('From ' + data.album)
-				.setThumbnail('attachment://image.png');
+			}
+			else {
+				playingEmbed = new MessageEmbed()
+					.setColor('#ff7f00')
+					.setTitle(data.title)
+					.setAuthor({ name: data.artist })
+					.setDescription('From ' + data.album)
+					.setThumbnail('attachment://image.png');
+			}
 
 			await interaction.reply({ embeds: [playingEmbed], files: [file] });
 

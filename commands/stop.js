@@ -8,7 +8,7 @@ module.exports = {
 		.setDMPermission(false),
 	async execute(client, interaction) {
 
-		if (!client.music.get('player')) {
+		if (!client.player.get(interaction.guild.id)) {
 			log.warn('[ ' + interaction.member.guild.name + ' ] ' + 'Don\'t have player of music setted. Mistake of ' + interaction.member.user.username + ' ?');
 			await interaction.reply('I already play a song ?');
 		}

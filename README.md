@@ -1,6 +1,6 @@
 <p align="center">
 <h1 align="center">Bot_Passive</h1>
-<h4 align="center">A bot discord that plays local music</h4>
+<h4 align="center">A bot discord self-hosted. That plays some local music and youtube music</h4>
 </p>
 
 <p align="center">
