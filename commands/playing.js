@@ -2,6 +2,10 @@ const { MessageAttachment, MessageEmbed } = require('discord.js');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const log = require('log4js').getLogger('Playing');
 
+function str_pad_left(string, pad, length) {
+	return (new Array(length + 1).join(pad) + string).slice(-length);
+}
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('playing')
@@ -22,6 +26,9 @@ module.exports = {
 			const data = player._state.resource.metadata;
 			const file = new MessageAttachment(data.picture, 'image.png');
 			let playingEmbed;
+			const minutes = Math.floor(data.duration / 60);
+			const seconds = data.duration - minutes * 60;
+
 			if (data.album == 'Youtube') {
 				playingEmbed = new MessageEmbed()
 					.setColor('#ff7f00')
@@ -29,8 +36,10 @@ module.exports = {
 					.setURL(data.urlVideo)
 					.setAuthor({ name: data.artist, url: data.urlChannel })
 					.setDescription('From ' + data.album)
+					.addField('Duration : ', minutes + ':' + str_pad_left(seconds, '0', 2), false)
 					.setThumbnail('attachment://image.png')
-					.setImage(data.ytPicture);
+					.setImage(data.ytPicture)
+					.setFooter({ text: 'Requested by ' + data.userAskedThis, iconURL: data.pictureProfileUser });
 
 			}
 			else {

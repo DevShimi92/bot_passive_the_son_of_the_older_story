@@ -24,6 +24,10 @@ module.exports = {
 
 			for (let index = 1; index < playlist.length; index++) {
 				msg += index + ' : ' + playlist[index].metadata.title + '\n';
+				if (index > 9) {
+					msg += 'and more ...' + '\n';
+					break;
+				}
 			}
 
 			msg += '```';

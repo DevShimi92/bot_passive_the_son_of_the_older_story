@@ -24,9 +24,13 @@ module.exports = {
 			else {
 				log.info('[ ' + interaction.member.guild.name + ' ] ' + 'End of playlist');
 				player.stop();
-				client.player.set('player', undefined);
-				client.playlist.set('playlist', []);
+				client.player.set(interaction.guild.id, undefined);
+				client.playlist.set(interaction.guild.id, []);
 				log.info('[ ' + interaction.member.guild.name + ' ] ' + 'Music stopped');
+				const numberOfPlayer = new Number(client.player.get('numberOfPlayer'));
+				if (numberOfPlayer > 0) {
+					client.player.set('numberOfPlayer', numberOfPlayer - 1);
+				}
 			}
 			await interaction.reply('Skip!');
 		}
