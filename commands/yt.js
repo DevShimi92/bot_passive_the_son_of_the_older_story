@@ -1,5 +1,4 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { createAudioResource } = require('@discordjs/voice');
 const fs = require('fs');
 const ytdl = require('ytdl-core');
 const ytpl = require('ytpl');
@@ -17,48 +16,96 @@ function checkDirIfNotCreateDir() {
 
 }
 
-async function addYtbSong(interaction, url) {
+async function addYtbSong(interaction, url, lengthPlaylist) {
 
 	checkDirIfNotCreateDir();
 
 	const data = await ytdl.getInfo(url);
 
-	const pathAndNameMusicFile = './storage_yt/' + data.videoDetails.author.id + data.videoDetails.videoId + '.mp4';
+	if (data.player_response.playabilityStatus.status != 'OK') {
+		log.error('[ ' + interaction.member.guild.name + ' ] ' + 'Error : ' + data.videoDetails.title + ' is not playlable for this reason :  ' + data.player_response.playabilityStatus.reason);
+		log.error('[ ' + interaction.member.guild.name + ' ] ' + 'Url : ' + url);
+		return null;
+	}
+	else if (data.videoDetails.liveBroadcastDetails?.isLiveNow) {
+		log.error('[ ' + interaction.member.guild.name + ' ] ' + 'Error : ' + data.videoDetails.title + ' is not playlable beacause is a stream');
+		log.error('[ ' + interaction.member.guild.name + ' ] ' + 'Url : ' + url);
+		return null;
+	}
+
+	let quality = 250;
+	let container = '.webm';
+
+	try {
+		ytdl.chooseFormat(data.formats, { quality: '250' });
+	}
+	catch (error) {
+		quality = 'highestaudio' ;
+		container = '.mp4';
+	}
+
+	const metadata = {
+		title: data.videoDetails.title,
+		container: container,
+		album: 'Youtube',
+		artist: data.videoDetails.author.name,
+		picture: data.videoDetails.author.thumbnails[data.videoDetails.author.thumbnails.length - 1].url,
+		urlChannel : data.videoDetails.author.channel_url,
+		urlVideo: url,
+		ytPicture: data.videoDetails.thumbnails[data.videoDetails.thumbnails.length - 1].url,
+		userAskedThis: interaction.user.username,
+		pictureProfileUser:interaction.user.displayAvatarURL(),
+		duration: data.videoDetails.lengthSeconds,
+	};
+
+	const pathAndNameMusicFile = './storage_yt/' + data.videoDetails.author.id + data.videoDetails.videoId + container;
 
 	try {
 		if (fs.existsSync(pathAndNameMusicFile)) {
 			log.info('- Music already download');
+
+			const resource = { path : pathAndNameMusicFile, metadata: metadata };
+
+			return resource;
 		}
 		else {
 			log.info('- Download of ' + data.videoDetails.title + ' ...');
-			ytdl.downloadFromInfo(data, { filter : 'audioonly', quality: '140' }).pipe(fs.createWriteStream(pathAndNameMusicFile));
-			log.info('- Done !');
+
+			if (lengthPlaylist == 0) {
+
+				log.trace('- Cached Music');
+
+				const opusStream = ytdl.downloadFromInfo(data, { filter : 'audioonly', dlChunkSize: 0, quality: quality, highWaterMark : 1 << 30 });
+
+				const resource = { path : opusStream, metadata: metadata };
+
+				log.info('- Done !');
+
+				return resource;
+
+			}
+			else {
+
+				ytdl.downloadFromInfo(data, { filter : 'audioonly', dlChunkSize: 0, quality: quality, highWaterMark : 1 << 30 }).pipe(fs.createWriteStream(pathAndNameMusicFile));
+
+				const resource = { path : pathAndNameMusicFile, metadata: metadata };
+
+				log.info('- Done !');
+
+				return resource;
+
+			}
+
 		}
 	}
 	catch (err) {
-		log.error('- Error during download from this link :  ' + url);
+		log.error('[ ' + interaction.member.guild.name + ' ] ' + 'Error during download from this link :  ' + url);
 		log.error(err);
 		return null;
 	}
 
-	const resource = createAudioResource(pathAndNameMusicFile, {
-		metadata: {
-			title: data.videoDetails.title,
-			album: 'Youtube',
-			artist: data.videoDetails.author.name,
-			picture: data.videoDetails.author.thumbnails[data.videoDetails.author.thumbnails.length - 1].url,
-			urlChannel : data.videoDetails.author.channel_url,
-			urlVideo: url,
-			ytPicture: data.videoDetails.thumbnails[data.videoDetails.thumbnails.length - 1].url,
-			userAskedThis: interaction.user.username,
-			pictureProfileUser:interaction.user.displayAvatarURL(),
-			duration: data.videoDetails.lengthSeconds,
-		},
-	});
-
-	return resource;
-
 }
+
 module.exports = {
 	data: new SlashCommandBuilder()
 		.setName('play-yt')
@@ -82,28 +129,21 @@ module.exports = {
 
 			if (url.match(youtubRegex) && url.match(songRegex)) {
 
-				const resource = await addYtbSong(interaction, url);
-
-				if (!client.player.get(interaction.guild.id)) {
-					await play.createPlayer(client, interaction);
-				}
-
 				if (!client.playlist.get(interaction.guild.id)) {
 					const playlist = [];
 					client.playlist.set(interaction.guild.id, playlist);
 				}
 
+				const resource = await addYtbSong(interaction, url, client.playlist.get(interaction.guild.id).length);
+
 				play.addSong(client, interaction, resource);
 
 			}
 			else if (url.match(youtubRegex) && url.match(playlistRegex)) {
+
 				const playlistYt = await ytpl(url);
 
 				await interaction.editReply('Adding the current playlist ...');
-
-				if (!client.player.get(interaction.guild.id)) {
-					await play.createPlayer(client, interaction);
-				}
 
 				if (!client.playlist.get(interaction.guild.id)) {
 					const playlist = [];
@@ -111,8 +151,8 @@ module.exports = {
 				}
 
 				for (let index = 0; index < playlistYt.items.length; index++) {
-					const resource = await addYtbSong(interaction, playlistYt.items[index].shortUrl);
-					play.addSong(client, interaction, resource, true);
+					const resource = await addYtbSong(interaction, playlistYt.items[index].shortUrl, client.playlist.get(interaction.guild.id).length);
+					await play.addSong(client, interaction, resource, true);
 				}
 
 				await interaction.editReply('Playlist added !');

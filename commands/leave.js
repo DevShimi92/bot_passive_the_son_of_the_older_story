@@ -42,9 +42,5 @@ module.exports = {
 			await interaction.reply('But i\'am not here !');
 		}
 
-		if (client.player.get('numberOfPlayer') == 0) {
-			clearStorage();
-		}
-
 	},
 };

@@ -1,7 +1,19 @@
+const fs = require('fs');
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { VoiceConnectionStatus, entersState, getVoiceConnection, joinVoiceChannel } = require('@discordjs/voice');
 const log = require('log4js').getLogger('Join');
 
+async function clearStorage() {
+	log.trace('- Deleting of storage_yb');
+	fs.rm('./storage_yt', { recursive: true }, (err) => {
+		if (err) {
+			log.error(err);
+		}
+		else {
+			log.trace('- Done');
+		}
+	});
+}
 
 async function connectToChannel(client, interaction, cmdOnly) {
 
@@ -49,9 +61,12 @@ async function connectToChannel(client, interaction, cmdOnly) {
 	});
 
 	newConnection.on(VoiceConnectionStatus.Destroyed, () => {
-		// try to delete the queue
-		if (client.queues) {
-			client.queues.delete(channel.guild.id);
+
+		const numberOfPlayer = new Number(client.player.get('numberOfPlayer'));
+		client.player.set('numberOfPlayer', numberOfPlayer - 1);
+
+		if (client.player.get('numberOfPlayer') == 0) {
+			clearStorage();
 		}
 	});
 }

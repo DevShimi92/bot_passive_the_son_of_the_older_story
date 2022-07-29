@@ -73,7 +73,13 @@ client.on('interactionCreate', async interaction => {
 	catch (error) {
 		log.error('[ ' + interaction.member.guild.name + ' ] ' + 'Error with ' + interaction.commandName);
 		log.error(error);
-		await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+		if (interaction.commandName == 'play-yt') {
+			await interaction.editReply({ content: 'There was an error while executing this command!', ephemeral: true });
+		}
+		else {
+			await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+		}
+
 	}
 });
 

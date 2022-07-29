@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
-const { AudioPlayerStatus, createAudioResource, createAudioPlayer, getVoiceConnection } = require('@discordjs/voice');
+const { AudioPlayerStatus, StreamType, createAudioResource, createAudioPlayer, getVoiceConnection } = require('@discordjs/voice');
 const log = require('log4js').getLogger('Play');
 const join = require('./join');
 
@@ -29,14 +29,12 @@ async function randomSong(client, interaction) {
 
 	log.info('N° ' + ramdomID + ' : ' + song.name + ' is drawn this time');
 
-	const resource = createAudioResource(song.path, {
-		metadata: {
-			title: song.name,
-			album: song.album,
-			artist: song.artist,
-			picture: song.picture,
-		},
-	});
+	const resource = { path : song.path, metadata: {
+		title: song.name,
+		album: song.album,
+		artist: song.artist,
+		picture: song.picture,
+	} };
 
 	return resource;
 
@@ -45,10 +43,18 @@ async function randomSong(client, interaction) {
 async function addSong(client, interaction, resource, reply = false) {
 
 	if (resource == null) {
+		if (!reply) {
+			await interaction.editReply('This song can\'t be listen !');
+		}
 		return;
 	}
 
+	if (!client.player.get(interaction.guild.id)) {
+		await createPlayer(client, interaction);
+	}
+
 	const player = client.player.get(interaction.guild.id);
+
 	const connection = getVoiceConnection(interaction.guild.id);
 
 	const playlist = client.playlist.get(interaction.guild.id);
@@ -56,9 +62,23 @@ async function addSong(client, interaction, resource, reply = false) {
 	client.playlist.set(interaction.guild.id, playlist);
 
 	if (!player.checkPlayable()) {
-		player.play(playlist[0]);
+
+		let AudioResource;
+
+		if (playlist[0].metadata.album == 'Youtube') {
+			let inputType = StreamType.WebmOpus;
+			if (playlist[0].metadata.container == '.mp4') { inputType = StreamType.Arbitrary; }
+			AudioResource = createAudioResource(playlist[0].path, { inputType: inputType, metadata : playlist[0].metadata });
+		}
+		else {
+			AudioResource = createAudioResource(playlist[0].path, { metadata : playlist[0].metadata });
+		}
+
+		await player.play(AudioResource);
 		connection.subscribe(player);
+
 		log.info('[ ' + interaction.member.guild.name + ' ] ' + 'The audio player play this song : ' + resource.metadata.title);
+
 		if (!reply) {
 			await interaction.editReply('Play !');
 		}
@@ -80,7 +100,6 @@ async function createPlayer(client, interaction) {
 	player.on(AudioPlayerStatus.Paused, () => {
 		log.debug('[ ' + interaction.member.guild.name + ' ] ' + 'The audio player has be paused!');
 		client.paused.set(interaction.guild.id, true);
-
 	});
 
 	player.on(AudioPlayerStatus.Playing, () => {
@@ -89,11 +108,23 @@ async function createPlayer(client, interaction) {
 	});
 
 	player.on(AudioPlayerStatus.Idle, () => {
+
 		const playlist = client.playlist.get(interaction.guild.id);
+
 		playlist.shift();
+
 		if (playlist.length > 0) {
 			log.info('[ ' + interaction.member.guild.name + ' ] ' + 'Next Song : ' + playlist[0].metadata.title);
-			player.play(playlist[0]);
+			let AudioResource;
+			if (playlist[0].metadata.album == 'Youtube') {
+				let inputType = StreamType.WebmOpus;
+				if (playlist[0].metadata.container == '.mp4') { inputType = StreamType.Arbitrary; }
+				AudioResource = createAudioResource(playlist[0].path, { inputType: inputType, metadata : playlist[0].metadata });
+			}
+			else {
+				AudioResource = createAudioResource(playlist[0].path, { metadata : playlist[0].metadata });
+			}
+			player.play(AudioResource);
 		}
 		else {
 			log.info('[ ' + interaction.member.guild.name + ' ] ' + 'End of playlist');
