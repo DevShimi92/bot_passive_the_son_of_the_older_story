@@ -40,11 +40,11 @@ async function randomSong(client, interaction) {
 
 }
 
-async function addSong(client, interaction, resource, reply = false) {
+async function addSong(client, interaction, resource, reply = null) {
 
 	if (resource == null) {
-		if (!reply) {
-			await interaction.editReply('This song can\'t be listen !');
+		if (reply != null) {
+			await interaction.editReply(reply);
 		}
 		return;
 	}
@@ -79,14 +79,14 @@ async function addSong(client, interaction, resource, reply = false) {
 
 		log.info('[ ' + interaction.member.guild.name + ' ] ' + 'The audio player play this song : ' + resource.metadata.title);
 
-		if (!reply) {
+		if (reply == null) {
 			await interaction.editReply('Play !');
 		}
 	}
 	else {
 		log.info('[ ' + interaction.member.guild.name + ' ] ' + 'This song as add to playlist : ' + resource.metadata.title);
-		if (!reply) {
-			await interaction.editReply('Song add to playlist');
+		if (reply == null) {
+			await interaction.editReply('Song added to playlist');
 		}
 
 	}

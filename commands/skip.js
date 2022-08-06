@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('@discordjs/builders');
 const { createAudioResource, StreamType } = require('@discordjs/voice');
 
-const log = require('log4js').getLogger('skip');
+const log = require('log4js').getLogger('Skip');
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -20,7 +20,7 @@ module.exports = {
 			const playlist = client.playlist.get(interaction.guild.id);
 			playlist.shift();
 			if (playlist.length > 0) {
-				log.info('Next Song : ' + playlist[0].metadata.title);
+				log.info('[ ' + interaction.member.guild.name + ' ] ' + 'Next Song : ' + playlist[0].metadata.title);
 				let AudioResource;
 				if (playlist[0].metadata.album == 'Youtube') {
 					let inputType = StreamType.WebmOpus;

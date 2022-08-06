@@ -20,7 +20,16 @@ async function addYtbSong(interaction, url, lengthPlaylist) {
 
 	checkDirIfNotCreateDir();
 
-	const data = await ytdl.getInfo(url);
+	let data ;
+
+	try {
+		data = await ytdl.getInfo(url);
+	}
+	catch (error) {
+		log.error('[ ' + interaction.member.guild.name + ' ] ' + 'Error with this link : ' + url);
+		log.error(error);
+		return null;
+	}
 
 	if (data.player_response.playabilityStatus.status != 'OK') {
 		log.error('[ ' + interaction.member.guild.name + ' ] ' + 'Error : ' + data.videoDetails.title + ' is not playlable for this reason :  ' + data.player_response.playabilityStatus.reason);
@@ -116,30 +125,19 @@ module.exports = {
 				.setRequired(true)),
 	async execute(client, interaction) {
 
+		let msg;
+
 		await interaction.deferReply();
 
 		if (await join.connectToChannel(client, interaction, false) == undefined) {
 
 			const url = interaction.options.getString('url');
 			const youtubRegex = /^(https?:\/\/)?(www\.)?(m\.|music\.)?(youtube\.com|youtu\.?be)\/.+$/gi;
-			const songRegex = /^.*(watch\?v=)([^#\\&\\?]*).*/gi;
 			const playlistRegex = /^.*(list=)([^#\\&\\?]*).*/gi;
 
 			log.trace('[ ' + interaction.member.guild.name + ' ] ' + interaction.member.user.username + ' want to play this link : ' + url);
 
-			if (url.match(youtubRegex) && url.match(songRegex)) {
-
-				if (!client.playlist.get(interaction.guild.id)) {
-					const playlist = [];
-					client.playlist.set(interaction.guild.id, playlist);
-				}
-
-				const resource = await addYtbSong(interaction, url, client.playlist.get(interaction.guild.id).length);
-
-				play.addSong(client, interaction, resource);
-
-			}
-			else if (url.match(youtubRegex) && url.match(playlistRegex)) {
+			if (url.match(youtubRegex) && url.match(playlistRegex)) {
 
 				const playlistYt = await ytpl(url);
 
@@ -156,6 +154,22 @@ module.exports = {
 				}
 
 				await interaction.editReply('Playlist added !');
+
+			}
+			else if (url.match(youtubRegex)) {
+
+				if (!client.playlist.get(interaction.guild.id)) {
+					const playlist = [];
+					client.playlist.set(interaction.guild.id, playlist);
+				}
+
+				const resource = await addYtbSong(interaction, url, client.playlist.get(interaction.guild.id).length);
+
+				if (resource == null) {
+					msg = 'Can\'t get a video from this link !';
+				}
+
+				play.addSong(client, interaction, resource, msg);
 
 			}
 			else {
